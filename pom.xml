@@ -76,7 +76,7 @@
 	</repositories>
 	<distributionManagement>
 		<repository>
-			<id>CI/CD</id>
+			<id>TEST</id>
 			<name>Corporate Repository</name>
 			<url>https://maven.anypoint.mulesoft.com/api/v2/organizations/ce235d46-115c-497c-b0e2-474afd80f5e9/maven</url>
 			<layout>default</layout>
