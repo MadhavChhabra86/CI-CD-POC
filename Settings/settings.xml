@@ -2,10 +2,10 @@
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
    <servers>
 <server>
-      <id>TEST</id>
+      <id>Pipeline</id>
 	  <name>Corporate Repository</name>
       <username>~~~Client~~~</username>
-      <password>${connectedAppClientId}~?~${connectedAppClientSecret}</password>
+      <password>49f4b0d1705446d2a735a77f0a3610e8~?~ee134F6Fc1fF4326831888BC935D9b1e</password>
     </server>  
   </servers>
   <pluginGroups>
