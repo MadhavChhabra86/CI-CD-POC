@@ -44,13 +44,18 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '${{ inputs.java }}'
+          
+      - name: "Create Maven Settings.xml"
+        run: |
+          mkdir -p ~/.m2
+          echo "${{ secrets.MAVEN_SETTINGS }}" > ~/.m2/settings.xml
 
       - name: "Run MUnit Tests"
         env:
           mule_env: ${{ inputs.environment == 'DEV' && secrets.dev_mule_env || secrets.test_mule_env }}
           mule_key: ${{ inputs.environment == 'DEV' && secrets.dev_mule_key || secrets.test_mule_key }}
         run: |
-          mvn clean test -D"mule.env"="$mule_env" -D"mule.key"="$mule_key" --settings settings/settings.xml
+          mvn clean test -D"mule.env"="$mule_env" -D"mule.key"="$mule_key" --settings ~/.m2/settings.xml
 
       - name: "Upload MUnit Report"
         uses: actions/upload-artifact@v4
@@ -65,6 +70,11 @@ jobs:
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@v4
+        
+      - name: "Create Maven Settings.xml"
+        run: |
+          mkdir -p ~/.m2
+          echo "${{ secrets.MAVEN_SETTINGS }}" > ~/.m2/settings.xml
 
       - name: "Cache Maven Dependencies"
         uses: actions/cache@v4
@@ -84,7 +94,7 @@ jobs:
           mule_env: ${{ inputs.environment == 'DEV' && secrets.dev_mule_env || secrets.test_mule_env }}
           mule_key: ${{ inputs.environment == 'DEV' && secrets.dev_mule_key || secrets.test_mule_key }}
         run: |
-          mvn clean package -D"mule.env"="$mule_env" -D"mule.key"="$mule_key" -DskipTests
+          mvn clean package -D"mule.env"="$mule_env" -D"mule.key"="$mule_key" -DskipTests --settings ~/.m2/settings.xml
 
       - name: "Upload JAR Artifact"
         uses: actions/upload-artifact@v4
@@ -99,6 +109,10 @@ jobs:
     steps:
       - name: "Checkout Repository"
         uses: actions/checkout@v4
+      - name: "Create Maven Settings.xml"
+        run: |
+          mkdir -p ~/.m2
+          echo "${{ secrets.MAVEN_SETTINGS }}" > ~/.m2/settings.xml
 
       - name: "Cache Maven Dependencies"
         uses: actions/cache@v4
@@ -126,7 +140,9 @@ jobs:
           businessGroupId: ${{ inputs.environment == 'DEV' && secrets.dev_business_group_id || secrets.test_business_group_id }}
           environmentId: ${{ inputs.environment == 'DEV' && secrets.dev_environment_id || secrets.test_environment_id }}
         run: |
-          mvn clean deploy -DskipTests -DmuleDeploy \
+          mvn clean deploy -DskipTests \
+            --settings ~/.m2/settings.xml
+            -DmuleDeploy \
             -DconnectedAppClientId="$connectedAppId" \
             -DconnectedAppClientSecret="$connectedAppSecret" \
             -DconnectedAppGrantType="$grantType" \
