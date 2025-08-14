@@ -1,0 +1,139 @@
+name: "CI/CD Pipeline POC"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment Environment"
+        required: true
+        type: choice
+        options:
+          - DEV
+          - UAT
+      java:
+        description: "Java Version"
+        required: true
+        type: choice
+        options:
+          - '8'
+          - '17'
+      commit:
+        description: "Commit Message"
+        required: true
+        type: string
+
+run-name: "Commit: ${{ inputs.commit }} | Env: ${{ inputs.environment }} | Mule POC"
+
+jobs:
+  # 1. Test Job
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Cache Maven Dependencies"
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: "Setup Java ${{ inputs.java }}"
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '${{ inputs.java }}'
+
+      - name: "Run MUnit Tests"
+        env:
+          mule_env: ${{ inputs.environment == 'DEV' && secrets.dev_mule_env || secrets.uat_mule_env }}
+          mule_key: ${{ inputs.environment == 'DEV' && secrets.dev_mule_key || secrets.uat_mule_key }}
+        run: |
+          mvn clean test -D"mule.env"="$mule_env" -D"mule.key"="$mule_key" --settings settings/settings.xml
+
+      - name: "Upload MUnit Report"
+        uses: actions/upload-artifact@v4
+        with:
+          name: "MUnit Report"
+          path: target/site/munit/coverage
+
+  # 2. Build Job
+  Build:
+    needs: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Cache Maven Dependencies"
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: "Setup Java ${{ inputs.java }}"
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '${{ inputs.java }}'
+
+      - name: "Build Mule JAR"
+        env:
+          mule_env: ${{ inputs.environment == 'DEV' && secrets.dev_mule_env || secrets.uat_mule_env }}
+          mule_key: ${{ inputs.environment == 'DEV' && secrets.dev_mule_key || secrets.uat_mule_key }}
+        run: |
+          mvn clean package -D"mule.env"="$mule_env" -D"mule.key"="$mule_key" -DskipTests
+
+      - name: "Upload JAR Artifact"
+        uses: actions/upload-artifact@v4
+        with:
+          name: "Mule JAR"
+          path: target/*.jar
+
+  # 3. Deploy Job
+  Deploy:
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Cache Maven Dependencies"
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: "Download JAR"
+        uses: actions/download-artifact@v4
+        with:
+          name: "Mule JAR"
+          path: target/
+
+      - name: "Deploy to CloudHub 2.0"
+        env:
+          connectedAppId: ${{ secrets.connected_app_id }}
+          connectedAppSecret: ${{ secrets.connected_app_secret }}
+          grantType: ${{ secrets.grant_type }}
+          mule_env: ${{ inputs.environment == 'DEV' && secrets.dev_mule_env || secrets.uat_mule_env }}
+          mule_key: ${{ inputs.environment == 'DEV' && secrets.dev_mule_key || secrets.uat_mule_key }}
+          targetName: "cc-mule-private-space"
+          javaVersion: ${{ inputs.java }}
+          appName: "mule-ci-cd-poc-${{ inputs.environment | toLowerCase }}"
+          businessGroupId: ${{ inputs.environment == 'DEV' && secrets.dev_business_group_id || secrets.uat_business_group_id }}
+          environmentId: ${{ inputs.environment == 'DEV' && secrets.dev_environment_id || secrets.uat_environment_id }}
+        run: |
+          mvn clean deploy -DskipTests -DmuleDeploy \
+            -DconnectedAppClientId="$connectedAppId" \
+            -DconnectedAppClientSecret="$connectedAppSecret" \
+            -DconnectedAppGrantType="$grantType" \
+            -Denvironment="$environmentId" \
+            -Dtarget="$targetName" \
+            -DjavaVersion="$javaVersion" \
+            -DappName="$appName" \
+            -D"mule.env"="$mule_env" \
+            -D"mule.key"="$mule_key" \
+            -DbusinessGroupId="$businessGroupId"
