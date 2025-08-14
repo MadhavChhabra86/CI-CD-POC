@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<flow name="demo-poc-main-flow" doc:id="99eff5fc-2dbd-4dec-b420-cd1ca9f655d8" >
+		<scheduler doc:name="Scheduler" doc:id="26bc1c4c-54bb-4435-b01b-c132cde68b67" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Health Log" doc:id="58a40bab-4fa8-47f7-807c-260002fb8b33" message='#["The app is working fine at " ++ (now().hour as String) ++ ":" ++ (now().minutes as String)]'/>
+	</flow>
+</mule>
