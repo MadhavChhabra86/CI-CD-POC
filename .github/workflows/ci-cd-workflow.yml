@@ -91,9 +91,52 @@ jobs:
           name: "Mule JAR"
           path: target/*.jar
 
-  # 3. Deploy Job
-  Deploy:
+  Publish-To-Exchange:
     needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout Repository"
+        uses: actions/checkout@v4
+
+      - name: "Cache Maven Dependencies"
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-maven-
+
+      - name: "Download JAR"
+        uses: actions/download-artifact@v4
+        with:
+          name: "Mule JAR"
+          path: target/
+
+      - name: "Publish to Exchange"
+        env:
+          connectedAppId: ${{ secrets.connected_app_id }}
+          connectedAppSecret: ${{ secrets.connected_app_secret }}
+          grantType: ${{ secrets.grant_type }}
+          mule_env: ${{ inputs.environment == 'DEV' && secrets.dev_mule_env || secrets.test_mule_env }}
+          mule_key: ${{ inputs.environment == 'DEV' && secrets.dev_mule_key || secrets.test_mule_key }}
+          targetName: "cc-mule-private-space"
+          javaVersion: ${{ inputs.java }}
+          appName: "mule-ci-cd-poc-${{inputs.environment}}"
+          businessGroupId: ${{ inputs.environment == 'DEV' && secrets.dev_business_group_id || secrets.test_business_group_id }}
+          environmentId: ${{ inputs.environment == 'DEV' && secrets.dev_environment_id || secrets.test_environment_id }}
+        run: |
+          mvn clean deploy -DskipTests \
+            --settings Settings/settings.xml
+            -DconnectedAppClientId="$connectedAppId" \
+            -DconnectedAppClientSecret="$connectedAppSecret" \
+            -DconnectedAppGrantType="$grantType" \
+            -Denvironment="$environmentId" \
+            -Dtarget="$targetName" \
+            -DjavaVersion="$javaVersion" \
+            -DappName="$appName" \
+            -D"mule.env"="$mule_env"
+  # 4. Deploy Job
+  Deploy:
+    needs: Publish-To-Exchange
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout Repository"
