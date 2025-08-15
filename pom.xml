@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ce235d46-115c-497c-b0e2-474afd80f5e9</groupId>
 	<artifactId>madhav-ci-cd-poc</artifactId>
-	<version>1.0.3</version>
+	<version>1.0.4</version>
 	<packaging>mule-application</packaging>
 	<name>madhav-ci-cd-poc</name>
 	<properties>
@@ -76,7 +76,7 @@
 	</repositories>
 	<distributionManagement>
 		<repository>
-			<id>Pipeline</id>
+			<id>CI/CD</id>
 			<name>Corporate Repository</name>
 			<url>https://maven.anypoint.mulesoft.com/api/v2/organizations/ce235d46-115c-497c-b0e2-474afd80f5e9/maven</url>
 			<layout>default</layout>
