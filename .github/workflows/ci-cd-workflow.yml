@@ -120,12 +120,12 @@ jobs:
           mule_key: ${{ inputs.environment == 'DEV' && secrets.dev_mule_key || secrets.test_mule_key }}
           targetName: "cc-mule-private-space"
           javaVersion: ${{ inputs.java }}
-          appName: "mule-ci-cd-poc-${{inputs.environment}}"
+          appName: "mule-ci-cd-poc-${{ inputs.environment }}"
           businessGroupId: ${{ inputs.environment == 'DEV' && secrets.dev_business_group_id || secrets.test_business_group_id }}
           environmentId: ${{ inputs.environment == 'DEV' && secrets.dev_environment_id || secrets.test_environment_id }}
         run: |
           mvn clean deploy -DskipTests \
-            --settings Settings/settings.xml
+            --settings Settings/settings.xml \
             -DconnectedAppClientId="$connectedAppId" \
             -DconnectedAppClientSecret="$connectedAppSecret" \
             -DconnectedAppGrantType="$grantType" \
@@ -134,6 +134,7 @@ jobs:
             -DjavaVersion="$javaVersion" \
             -DappName="$appName" \
             -D"mule.env"="$mule_env"
+
   # 4. Deploy Job
   Deploy:
     needs: Publish-To-Exchange
@@ -164,12 +165,12 @@ jobs:
           mule_key: ${{ inputs.environment == 'DEV' && secrets.dev_mule_key || secrets.test_mule_key }}
           targetName: "cc-mule-private-space"
           javaVersion: ${{ inputs.java }}
-          appName: "mule-ci-cd-poc-${{inputs.environment}}"
+          appName: "mule-ci-cd-poc-${{ inputs.environment }}"
           businessGroupId: ${{ inputs.environment == 'DEV' && secrets.dev_business_group_id || secrets.test_business_group_id }}
           environmentId: ${{ inputs.environment == 'DEV' && secrets.dev_environment_id || secrets.test_environment_id }}
         run: |
           mvn clean deploy -DskipTests \
-            --settings Settings/settings.xml
+            --settings Settings/settings.xml \
             -DmuleDeploy \
             -DconnectedAppClientId="$connectedAppId" \
             -DconnectedAppClientSecret="$connectedAppSecret" \
