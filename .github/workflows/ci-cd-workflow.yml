@@ -165,7 +165,8 @@ jobs:
           mule_key: ${{ inputs.environment == 'DEV' && secrets.dev_mule_key || secrets.test_mule_key }}
           targetName: "cc-mule-private-space"
           javaVersion: ${{ inputs.java }}
-          appName: "mule-ci-cd-poc-${{ toLower(inputs.environment) }}"
+          appName: ${{ inputs.environment == 'DEV' && 'mule-ci-cd-poc-dev' || 
+                       inputs.environment == 'TEST' && 'mule-ci-cd-poc-test' }}
           businessGroupId: ${{ inputs.environment == 'DEV' && secrets.dev_business_group_id || secrets.test_business_group_id }}
           environmentId: ${{ inputs.environment == 'DEV' && secrets.dev_environment_id || secrets.test_environment_id }}
         run: |
